@@ -4,7 +4,7 @@ import { animate, useInView, useMotionValue, useMotionValueEvent, useReducedMoti
 import { useEffect, useId, useRef, useState } from "react"
 
 import { fitBoxes, IsoBox } from "@/components/iso/iso-box"
-import { HatchPattern, SceneShapes } from "@/components/greenhouse/greenhouse-drawing"
+import { SceneDefs, sceneIds, SceneShapes } from "@/components/greenhouse/greenhouse-drawing"
 import { buildScene, RIDGE } from "@/components/greenhouse/scene"
 import { points, project, type V3 } from "@/lib/iso"
 
@@ -41,7 +41,7 @@ function Tree({ at }: { at: V3 }) {
 }
 
 export function IsoFarm() {
-  const hatchId = `hatch-${useId().replace(/[^a-zA-Z0-9]/g, "")}`
+  const { hatchId, glowId } = sceneIds(useId())
   const ref = useRef<SVGSVGElement>(null)
   const inView = useInView(ref, { once: true, amount: 0.4 })
   const reduce = useReducedMotion()
@@ -61,7 +61,7 @@ export function IsoFarm() {
   return (
     <svg ref={ref} viewBox={viewBox} role="img" aria-label="Isometric plot with two greenhouses and crop rows" className="size-full overflow-visible">
       <defs>
-        <HatchPattern id={hatchId} />
+        <SceneDefs hatchId={hatchId} glowId={glowId} />
       </defs>
       <IsoBox a={[-24, -14, -4]} b={[404, 222, 0]} mat="grass" />
       <IsoBox a={[208, -14, -0.5]} b={[238, 124, 0.4]} mat="concrete" />
@@ -86,7 +86,7 @@ export function IsoFarm() {
             onPointerLeave={() => setHot(null)}
             className="cursor-crosshair"
           >
-            <SceneShapes scene={scene} glazing={i === 1 ? "poly" : "clear"} frame="auto" all={hot === i} hatchId={hatchId} />
+            <SceneShapes scene={scene} glazing={i === 1 ? "poly" : "clear"} frame="auto" all={hot === i} hatchId={hatchId} glowId={glowId} />
           </g>
         )
       })}

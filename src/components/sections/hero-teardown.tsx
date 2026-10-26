@@ -11,6 +11,7 @@ import {
 } from "motion/react"
 import { useEffect, useRef, useState, type PointerEvent } from "react"
 
+import { GrassFringe } from "@/components/grass-fringe"
 import { GreenhouseDrawing } from "@/components/greenhouse/greenhouse-drawing"
 import { activeAt, PART_ORDER, PARTS, stageOf, staggered, type PartKind } from "@/components/greenhouse/scene"
 import { Button } from "@/components/ui/button"
@@ -83,9 +84,10 @@ export function HeroTeardown() {
   return (
     <section ref={sectionRef} id="top" className="relative h-[480vh]" aria-label="Exploded view of the greenhouse structure">
       <div
-        className="bg-drafting sticky top-0 flex h-svh flex-col overflow-hidden"
+        className="bg-meadow sticky top-0 flex h-svh flex-col overflow-hidden"
         onPointerMove={onPointerMove}
       >
+        <GrassFringe className="pointer-events-none absolute inset-x-0 bottom-11 h-11 w-full" />
         <div className="relative mx-auto grid min-h-0 w-full max-w-[1440px] flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)] px-4 pt-14 sm:px-6 lg:grid-cols-12 lg:px-10">
           {/* Copy, then the parts legend takes its place */}
           <div className="pointer-events-none relative z-10 flex flex-col justify-start pt-8 lg:col-span-5 lg:justify-center lg:pt-0 xl:col-span-4">

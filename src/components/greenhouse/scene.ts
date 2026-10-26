@@ -143,6 +143,9 @@ export type Material =
   | "fruit"
   | "hole"
   | "steel"
+  | "lamp"
+  | "cone"
+  | "glow"
 
 export type Shape = {
   kind: PartKind
@@ -206,6 +209,16 @@ export function buildScene(input: SceneInput): Scene {
   const line = (kind: PartKind, ps: V3[], o: V3, extra?: Partial<Shape>) =>
     shapes.push({ kind, mat: "frame", line: true, pts: ps.map((p) => project(add(p, o))), ...extra })
   const flat = (ps: V3[], o: V3 = [0, 0, 0]) => ps.map((p) => project(add(p, o)))
+  /** Screen-space ellipse around a world point; filled with a radial glow at night. */
+  const glow = (c: V3, rx: number, ry: number) => {
+    const [cx, cy] = project(c)
+    const pts: V2[] = []
+    for (let k = 0; k < 28; k++) {
+      const a = (k / 28) * Math.PI * 2
+      pts.push([cx + Math.cos(a) * rx, cy + Math.sin(a) * ry])
+    }
+    shapes.push({ kind: "frame", mat: "glow", pts, noStroke: true })
+  }
   // Rounded so server and browser floating point agree during hydration.
   const anchor = (kind: PartKind, p: V3, o: V3) => {
     const [x, y] = project(add(p, o))
@@ -239,6 +252,9 @@ export function buildScene(input: SceneInput): Scene {
       }
     }
   }
+
+  // Light spilling onto the ground around the house (only visible at night)
+  glow([L / 2, MID, 0], (L + SPAN) * 0.62, (L + SPAN) * 0.3)
 
   // 10 — strip foundation
   const oF = move("foundation", [0, 0, -36])
@@ -289,6 +305,9 @@ export function buildScene(input: SceneInput): Scene {
   }
   box("frame", "frame", [-1.1, -1.1, EAVE - 2.2], [L + 1.1, 1.1, EAVE], oX)
   beam("frame", [0, MID, RIDGE], [L, MID, RIDGE], 2.4, oX)
+
+  // Interior glow, behind the beds and lamps
+  glow([L / 2, MID, EAVE * 0.55], (L + SPAN) * 0.5, (L + SPAN) * 0.36)
 
   // Floor and the beds, seen through the glass
   shapes.push({
@@ -348,6 +367,21 @@ export function buildScene(input: SceneInput): Scene {
   line("irrigation", [[L - 12, 27, 12.8], [L - 12, 73, 12.8]], oI, { tone: "water", width: 1.6 })
   anchor("irrigation", [L - 12, 50, 12.8], oI)
   anchor("beds", [11, 86, 6], oX)
+
+  // Hanging lamps, one per bay, with a cone of light onto the beds
+  for (let i = 0; i < n; i++) {
+    const x = (i + 0.5) * BAY
+    const zl = RIDGE - 16
+    line("frame", [[x, MID, RIDGE], [x, MID, zl + 2]], oX, { width: 0.7 })
+    shapes.push({
+      kind: "frame",
+      mat: "cone",
+      noStroke: true,
+      pts: flat([[x - 3.5, MID, zl], [x + 3.5, MID, zl], [x + 14, MID, 13], [x - 14, MID, 13]]),
+    })
+    for (const f of boxFaces([x - 4, MID - 2, zl], [x + 4, MID + 2, zl + 2], IDENTITY, oX))
+      shapes.push({ kind: "frame", mat: "lamp", pts: f.pts, light: light(f.normal) })
+  }
 
   // Frame, front half
   box("frame", "frame", [L - 1.2, 1.2, 0], [L + 1.2, SPAN - 1.2, 4], oX)
@@ -479,6 +513,7 @@ export function buildScene(input: SceneInput): Scene {
   }
 
   const bounds = emptyBounds()
-  for (const s of shapes) grow(bounds, s.pts)
+  // Glow pools spill past the house; leave them out so the camera frames the structure.
+  for (const s of shapes) if (s.mat !== "glow") grow(bounds, s.pts)
   return { shapes, anchors, dims, bounds }
 }

@@ -45,10 +45,10 @@ const DIM_TRANSFORM = {
   side: (x: number, y: number) => `matrix(0 -1 ${COS30} ${SIN30} ${x} ${y})`,
 }
 
-type Look = { glazing: GlazingKey; frame: FrameKey; active?: PartKind | null; all?: boolean; hatchId: string }
+type Look = { glazing: GlazingKey; frame: FrameKey; active?: PartKind | null; all?: boolean; hatchId: string; glowId: string }
 
 /** Paints a built scene. Shared by the main drawing and the farm illustration. */
-export function SceneShapes({ scene, glazing, frame, active, all, hatchId }: { scene: Scene } & Look) {
+export function SceneShapes({ scene, glazing, frame, active, all, hatchId, glowId }: { scene: Scene } & Look) {
   const g = GLAZING[glazing]
   const frameColor = frame === "auto" ? "var(--face)" : FRAME[frame].color
 
@@ -69,10 +69,13 @@ export function SceneShapes({ scene, glazing, frame, active, all, hatchId }: { s
       fruit: { fill: "var(--fruit)" },
       hole: { fill: "var(--shade)", fillOpacity: 0.55 },
       glass: {
-        fill: on ? "var(--signal)" : g.color,
+        fill: on ? "var(--signal)" : `color-mix(in oklab, ${g.color}, var(--lamp) var(--lamp-mix))`,
         fillOpacity: on ? 0.22 : s.hidden ? g.opacity * 0.6 : g.opacity * (0.85 + (1 - (s.light ?? 0.8)) * 0.5),
       },
       glint: { fill: "var(--glint)", fillOpacity: 0.6 },
+      lamp: { fill: mix("var(--lamp-body)", 100) },
+      cone: { fill: "var(--lamp-cone)" },
+      glow: { fill: `url(#${glowId})` },
     }
     return table[s.mat]
   }
@@ -80,7 +83,7 @@ export function SceneShapes({ scene, glazing, frame, active, all, hatchId }: { s
   return (
     <>
       {scene.shapes.map((s, i) => {
-        const on = all || active === s.kind
+        const on = (all || active === s.kind) && s.mat !== "glow" && s.mat !== "cone"
         if (s.line) {
           const tone = s.tone === "water" ? "var(--water)" : s.tone === "leaf" ? "color-mix(in oklab, var(--leaf) 55%, var(--shade))" : "var(--ink)"
           return (
@@ -120,12 +123,24 @@ export function SceneShapes({ scene, glazing, frame, active, all, hatchId }: { s
   )
 }
 
-export function HatchPattern({ id }: { id: string }) {
+/** Hatch for section cuts and the radial glow the lamps throw at night. */
+export function SceneDefs({ hatchId, glowId }: { hatchId: string; glowId: string }) {
   return (
-    <pattern id={id} width="3.2" height="3.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="3.2" stroke="var(--ink)" strokeOpacity="0.28" strokeWidth="0.45" />
-    </pattern>
+    <>
+      <pattern id={hatchId} width="3.2" height="3.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="3.2" stroke="var(--ink)" strokeOpacity="0.28" strokeWidth="0.45" />
+      </pattern>
+      <radialGradient id={glowId}>
+        <stop offset="0%" style={{ stopColor: "var(--lamp-glow)" }} />
+        <stop offset="100%" style={{ stopColor: "var(--lamp-glow)", stopOpacity: 0 }} />
+      </radialGradient>
+    </>
   )
+}
+
+export const sceneIds = (uid: string) => {
+  const clean = uid.replace(/[^a-zA-Z0-9]/g, "")
+  return { hatchId: `hatch-${clean}`, glowId: `glow-${clean}` }
 }
 
 type Props = {
@@ -167,7 +182,7 @@ export function GreenhouseDrawing({
   className,
   title = "Isometric exploded drawing of a glass greenhouse",
 }: Props) {
-  const hatchId = `hatch-${useId().replace(/[^a-zA-Z0-9]/g, "")}`
+  const { hatchId, glowId } = sceneIds(useId())
   const g = GLAZING[glazing]
   const input = { bays, explode, open, growth, fruit, shine, stagger, glint: g.glint, flutes: !!g.flutes }
 
@@ -249,10 +264,10 @@ export function GreenhouseDrawing({
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
-        <HatchPattern id={hatchId} />
+        <SceneDefs hatchId={hatchId} glowId={glowId} />
       </defs>
       <g transform={cameraTransform}>
-        <SceneShapes scene={scene} glazing={glazing} frame={frame} active={active} hatchId={hatchId} />
+        <SceneShapes scene={scene} glazing={glazing} frame={frame} active={active} hatchId={hatchId} glowId={glowId} />
 
         {dimsOpacity > 0 &&
           scene.dims.map((d, i) => (

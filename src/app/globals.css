@@ -67,6 +67,15 @@
   --leaf: oklch(0.74 0.16 135);
   --fruit: oklch(0.63 0.21 30);
   --water: oklch(0.6 0.15 240);
+  --meadow: oklch(0.945 0.035 132);
+  --tuft: oklch(0.7 0.11 138 / 55%);
+  --tuft-strong: oklch(0.62 0.13 140);
+  --flower: oklch(0.99 0.03 95);
+  --lamp: oklch(0.9 0.12 92);
+  --lamp-mix: 0%;
+  --lamp-glow: transparent;
+  --lamp-body: var(--steel);
+  --lamp-cone: transparent;
   --face: oklch(0.992 0.003 85);
   --shade: oklch(0.36 0.015 255);
   --concrete: oklch(0.91 0.008 80);
@@ -102,10 +111,19 @@
   --signal: oklch(0.88 0.17 128);
   --wood: oklch(0.45 0.06 60);
   --soil: oklch(0.26 0.04 40);
-  --floor: oklch(0.62 0.2 340 / 30%);
+  --floor: oklch(0.82 0.14 88 / 32%);
   --leaf: oklch(0.72 0.17 135);
   --fruit: oklch(0.68 0.2 30);
   --water: oklch(0.8 0.12 220);
+  --meadow: oklch(0.24 0.045 175);
+  --tuft: oklch(0.42 0.08 150 / 70%);
+  --tuft-strong: oklch(0.36 0.08 155);
+  --flower: oklch(0.92 0.17 105);
+  --lamp: oklch(0.9 0.13 92);
+  --lamp-mix: 58%;
+  --lamp-glow: oklch(0.86 0.15 88 / 60%);
+  --lamp-body: oklch(0.98 0.09 95);
+  --lamp-cone: oklch(0.92 0.13 95 / 22%);
   --face: oklch(0.37 0.08 258);
   --shade: oklch(0.17 0.06 262);
   --concrete: oklch(0.34 0.07 258);
@@ -167,5 +185,50 @@
   100% {
     transform: translateY(-10px);
     opacity: 0;
+  }
+}
+
+@layer utilities {
+  /* Meadow: grass tufts and little flowers, masked so they follow the theme */
+  .bg-meadow {
+    background-color: var(--meadow);
+    isolation: isolate;
+  }
+  .bg-meadow::before,
+  .bg-meadow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .bg-meadow::before {
+    background-color: var(--tuft);
+    mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22180%22%20height%3D%22180%22%3E%3Cpath%20d%3D%22M18%2030q-0.9%20-4.7%20-3.8%20-7.6M18%2030q0%20-5.7%200.9%20-9.5M18%2030q0.9%20-3.8%204.7%20-6.6M70%2014q-0.9%20-4.3%20-3.5%20-6.9M70%2014q0%20-5.2%200.9%20-8.7M70%2014q0.9%20-3.5%204.3%20-6.1M128%2040q-1.1%20-5.5%20-4.4%20-8.7M128%2040q0%20-6.6%201.1%20-10.9M128%2040q1.1%20-4.4%205.5%20-7.7M160%2096q-0.8%20-4.2%20-3.3%20-6.7M160%2096q0%20-5.0%200.8%20-8.3M160%2096q0.8%20-3.3%204.2%20-5.8M40%2092q-1.0%20-5.2%20-4.2%20-8.3M40%2092q0%20-6.2%201.0%20-10.4M40%2092q1.0%20-4.2%205.2%20-7.3M100%20120q-1.0%20-4.8%20-3.9%20-7.7M100%20120q0%20-5.8%201.0%20-9.6M100%20120q1.0%20-3.9%204.8%20-6.8M14%20158q-0.8%20-4.1%20-3.3%20-6.6M14%20158q0%20-5.0%200.8%20-8.3M14%20158q0.8%20-3.3%204.1%20-5.8M84%20170q-1.0%20-5.1%20-4.1%20-8.2M84%20170q0%20-6.2%201.0%20-10.3M84%20170q1.0%20-4.1%205.1%20-7.2M146%20156q-0.8%20-4.1%20-3.3%20-6.5M146%20156q0%20-4.9%200.8%20-8.2M146%20156q0.8%20-3.3%204.1%20-5.7M116%2078q-1.0%20-5.0%20-4.0%20-8.0M116%2078q0%20-6.0%201.0%20-10.0M116%2078q1.0%20-4.0%205.0%20-7.0%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.3%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E") 0 0 / 180px 180px repeat;
+  }
+  .bg-meadow::after {
+    background-color: var(--flower);
+    mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22260%22%20height%3D%22260%22%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%2248.2%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%2241.8%22%20cy%3D%2250%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%2251.8%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%2238.2%22%20cy%3D%2250%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%2228.2%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22191.8%22%20cy%3D%2230%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%2231.8%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22188.2%22%20cy%3D%2230%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22138.2%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22121.8%22%20cy%3D%22140%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22141.8%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22118.2%22%20cy%3D%22140%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22230%22%20cy%3D%22188.2%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22231.8%22%20cy%3D%22190%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22230%22%20cy%3D%22191.8%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22228.2%22%20cy%3D%22190%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%22218.2%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%2261.8%22%20cy%3D%22220%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%22221.8%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%2258.2%22%20cy%3D%22220%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22170%22%20cy%3D%22238.2%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22171.8%22%20cy%3D%22240%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22170%22%20cy%3D%22241.8%22%20r%3D%221.4%22/%3E%3Ccircle%20cx%3D%22168.2%22%20cy%3D%22240%22%20r%3D%221.4%22/%3E%3C/svg%3E") 0 0 / 260px 260px repeat;
+  }
+  .dark .bg-meadow::after {
+    animation: firefly 3.2s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes firefly {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sway {
+  from {
+    transform: skewX(-4deg);
+  }
+  to {
+    transform: skewX(4deg);
   }
 }
