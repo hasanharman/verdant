@@ -1,6 +1,6 @@
 "use client"
 
-import { DraftingCompassIcon, ScrollTextIcon } from "lucide-react"
+import { MoonIcon, SunIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useSyncExternalStore } from "react"
 
@@ -14,7 +14,7 @@ const subscribe = () => () => {}
 export function Nav() {
   const { resolvedTheme, setTheme } = useTheme()
   const mounted = useSyncExternalStore(subscribe, () => true, () => false)
-  const blueprint = mounted && resolvedTheme === "dark"
+  const dark = mounted && resolvedTheme === "dark"
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b bg-background/75 backdrop-blur-md">
@@ -38,14 +38,14 @@ export function Nav() {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={blueprint ? "Switch to paper" : "Switch to blueprint"}
-                  onClick={() => setTheme(blueprint ? "light" : "dark")}
+                  aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+                  onClick={() => setTheme(dark ? "light" : "dark")}
                 />
               }
             >
-              {blueprint ? <ScrollTextIcon /> : <DraftingCompassIcon />}
+              {dark ? <SunIcon /> : <MoonIcon />}
             </TooltipTrigger>
-            <TooltipContent>{blueprint ? "Paper" : "Blueprint"} mode</TooltipContent>
+            <TooltipContent>{dark ? "Light" : "Dark"} mode</TooltipContent>
           </Tooltip>
           <Button size="sm" render={<a href="#contact" />} nativeButton={false}>
             Get a quote
