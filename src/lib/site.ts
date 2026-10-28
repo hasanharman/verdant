@@ -9,7 +9,8 @@ export const site = {
   address: "Workshop · Industrial Zone, Your City",
   hours: "Mon–Sat · 08:30–18:30",
   year: 2026,
-  repo: "https://github.com/hasanharman/greenhouse",
+  url: "https://verdant-greenhouse.vercel.app",
+  repo: "https://github.com/hasanharman/verdant",
 }
 
 export const nav = [

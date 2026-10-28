@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google"
 
 import { ThemeProvider } from "@/components/theme-provider"
@@ -24,10 +24,29 @@ const instrumentSerif = Instrument_Serif({
   style: ["normal", "italic"],
 })
 
+const title = `${site.name} · ${site.tagline}`
+const description =
+  "Aluminium and glass greenhouses sized to your plot. Surveyed, founded, framed and glazed by one local team."
+
 export const metadata: Metadata = {
-  title: `${site.name} · ${site.tagline}`,
-  description:
-    "Aluminium and glass greenhouses sized to your plot. Surveyed, founded, framed and glazed by one local team.",
+  metadataBase: new URL(site.url),
+  title: { default: title, template: `%s · ${site.name}` },
+  description,
+  applicationName: site.name,
+  keywords: ["greenhouse", "glass greenhouse", "aluminium greenhouse", "gable greenhouse", "polycarbonate", "isometric", "configurator", "Verdant"],
+  authors: [{ name: "strad3r", url: "https://x.com/strad3r" }],
+  creator: "strad3r",
+  alternates: { canonical: "/" },
+  openGraph: { type: "website", url: "/", siteName: site.name, title, description, locale: "en_US" },
+  twitter: { card: "summary_large_image", title, description, creator: "@strad3r" },
+  robots: { index: true, follow: true },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f3ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0d0b" },
+  ],
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

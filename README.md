@@ -26,7 +26,7 @@
 
 ![Verdant Preview](public/demo.png)
 
-Live: [https://greenhouse-woad-pi.vercel.app/](https://greenhouse-woad-pi.vercel.app/)
+Live: [https://verdant-greenhouse.vercel.app/](https://verdant-greenhouse.vercel.app/)
 
 ## Features
 
@@ -57,8 +57,8 @@ Live: [https://greenhouse-woad-pi.vercel.app/](https://greenhouse-woad-pi.vercel
 ### Installation
 
 ```bash
-git clone https://github.com/hasanharman/greenhouse.git
-cd greenhouse
+git clone https://github.com/hasanharman/verdant.git
+cd verdant
 pnpm install
 pnpm dev
 ```
@@ -88,7 +88,7 @@ export const site = {
   address: "Workshop · Industrial Zone, Your City",
   hours: "Mon–Sat · 08:30–18:30",
   year: 2026,
-  repo: "https://github.com/hasanharman/greenhouse",
+  repo: "https://github.com/hasanharman/verdant",
 }
 ```
 
@@ -114,14 +114,14 @@ The same file holds the nav links, process steps, reasons and FAQ copy. Colours 
 
 ## Contributing
 
-Issues and pull requests are welcome: [hasanharman/greenhouse](https://github.com/hasanharman/greenhouse)
+Issues and pull requests are welcome: [hasanharman/verdant](https://github.com/hasanharman/verdant)
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=hasanharman%2Fgreenhouse&type=timeline&legend=top-left">
+<a href="https://www.star-history.com/?repos=hasanharman%2Fverdant&type=timeline&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=hasanharman/greenhouse&type=timeline&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=hasanharman/greenhouse&type=timeline&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=hasanharman/greenhouse&type=timeline&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=hasanharman/verdant&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=hasanharman/verdant&type=timeline&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=hasanharman/verdant&type=timeline&legend=top-left" />
  </picture>
 </a>
