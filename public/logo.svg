@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -11 27 26" width="270" height="260">
+  <polygon points="0.00,-8.00 13.86,0.00 8.66,-2.00 -5.20,-10.00" fill="color-mix(in oklab, oklch(0.992 0.003 85) 74%, oklch(0.36 0.015 255))" stroke="oklch(0.21 0.012 255)" stroke-width="0.3" stroke-linejoin="round"/>
+  <polygon points="-10.39,6.00 3.46,14.00 3.46,6.00 -10.39,-2.00" fill="oklch(0.58 0.15 152)" fill-opacity="0.4" stroke="oklch(0.21 0.012 255)" stroke-width="0.3" stroke-linejoin="round"/>
+  <polygon points="13.86,8.00 3.46,14.00 3.46,6.00 8.66,-2.00 13.86,0.00" fill="oklch(0.58 0.15 152)" fill-opacity="0.4" stroke="oklch(0.21 0.012 255)" stroke-width="0.3" stroke-linejoin="round"/>
+  <polygon points="-10.39,-2.00 3.46,6.00 8.66,-2.00 -5.20,-10.00" fill="color-mix(in oklab, oklch(0.992 0.003 85) 98%, oklch(0.36 0.015 255))" stroke="oklch(0.21 0.012 255)" stroke-width="0.3" stroke-linejoin="round"/>
+</svg>

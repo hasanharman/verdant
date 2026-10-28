@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+  <img src="public/logo.svg" alt="Verdant Logo" width="120" />
+  <h1>Verdant · Greenhouse</h1>
+  <p><strong>An isometric landing page for a greenhouse builder, drawn like a technical sheet in a meadow.</strong></p>
+
+  <p>
+    <a href="#features">Features</a> •
+    <a href="#demo">Demo</a> •
+    <a href="#getting-started">Getting Started</a> •
+    <a href="#usage">Usage</a> •
+    <a href="#customising">Customising</a> •
+    <a href="#project-structure">Project Structure</a> •
+    <a href="#tech-stack">Tech Stack</a>
+  </p>
+
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js" />
+    <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React" />
+    <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+    <img src="https://img.shields.io/badge/pnpm-10-F69220?logo=pnpm&logoColor=white" alt="pnpm" />
+  </p>
+</div>
+
+## Demo
+
+![Verdant Preview](public/demo.png)
+
+Live: [https://greenhouse-woad-pi.vercel.app/](https://greenhouse-woad-pi.vercel.app/)
+
+## Features
+
+- Scroll-driven exploded view that takes a 10-part greenhouse apart, from the ridge cap down to the strip foundation
+- Schedule of parts legend: hover a part to highlight it, click to scroll to its stage
+- Intro animation: the crop grows in, then the roof vents lift
+- Pointer-driven glass reflections, swaying grass and a meadow background
+- Light and dark themes; at night the hanging lamps glow and fireflies blink
+- Animated isometric process scenes: Survey, Foundation, Frame, Glaze
+- Live configurator:
+  - 4 glazings: Clear glass, Diffuse glass, Polycarbonate, Shade glass
+  - 4 frame finishes: Silver, Graphite, Moss green, White
+  - 3 to 7 bays with live millimetre dimensions
+  - Vents and door open/closed, crop stage (Empty, Seedlings, Harvest), explode slider and annotation toggle
+- SVG and PNG export of the drawing
+- `Quote this spec` drops the configured spec into the contact form
+- Contact form that opens the visitor's mail app, no backend needed
+- Hoverable isometric plot with two greenhouses and growing crop rows
+- Respects `prefers-reduced-motion`
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) 20+
+- [pnpm](https://pnpm.io/) 10+
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+git clone https://github.com/hasanharman/greenhouse.git
+cd greenhouse
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Scroll through the hero to explode the greenhouse; hover or click a part in the legend to focus it.
+2. Switch between light and dark from the nav to see the lamps come on.
+3. In `Configure`, pick the glazing, frame and length, open the vents, choose a crop stage and pull the drawing apart.
+4. Export the drawing as SVG or PNG, or press `Quote this spec` to send it to the contact form.
+5. Fill in your name and phone and press `Request a site visit` to open an email with the quote.
 
-## Learn More
+## Customising
 
-To learn more about Next.js, take a look at the following resources:
+Everything a business would change lives in `src/lib/site.ts`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```ts
+export const site = {
+  name: "Verdant",
+  tagline: "Glass greenhouses",
+  system: "VG-4",
+  city: "Your City",
+  phone: "+00 000 000 00 00",
+  email: "hello@example.com",
+  address: "Workshop · Industrial Zone, Your City",
+  hours: "Mon–Sat · 08:30–18:30",
+  year: 2026,
+  repo: "https://github.com/hasanharman/greenhouse",
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The same file holds the nav links, process steps, reasons and FAQ copy. Colours for both themes are CSS variables in `src/app/globals.css` (`--signal`, `--leaf`, `--meadow`, `--lamp`, …).
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `src/components/greenhouse/scene.ts`: greenhouse geometry, parts list, plants, lamps and explode timing
+- `src/components/greenhouse/greenhouse-drawing.tsx`: SVG renderer with labels, dimensions and camera
+- `src/components/iso/`: isometric primitives and the farm plot illustration
+- `src/components/sections/`: one file per page section
+- `src/lib/iso.ts`: isometric projection, lighting and easing helpers
+- `src/lib/export-svg.ts`: bakes CSS colours into the SVG for export
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Motion
+- shadcn/ui on Base UI
+
+## Contributing
+
+Issues and pull requests are welcome: [hasanharman/greenhouse](https://github.com/hasanharman/greenhouse)
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=hasanharman%2Fgreenhouse&type=timeline&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=hasanharman/greenhouse&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=hasanharman/greenhouse&type=timeline&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=hasanharman/greenhouse&type=timeline&legend=top-left" />
+ </picture>
+</a>
