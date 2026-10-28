@@ -1,5 +1,4 @@
-// A strip of grass blades along the bottom of the hero, swaying in three
-// out-of-step groups. Blades are generated once, deterministically.
+// Grass blades along the hero's bottom edge, swaying in three out-of-step groups.
 const WIDTH = 1600
 const HEIGHT = 44
 
@@ -15,6 +14,13 @@ const blades = Array.from({ length: 260 }, (_, i) => {
   return { group: i % 3, d: `M${(x - w).toFixed(1)} ${HEIGHT}Q${(x + lean * 0.3).toFixed(1)} ${(HEIGHT - h * 0.6).toFixed(1)} ${(x + lean).toFixed(1)} ${(HEIGHT - h).toFixed(1)}Q${(x + lean * 0.3 + w).toFixed(1)} ${(HEIGHT - h * 0.5).toFixed(1)} ${(x + w).toFixed(1)} ${HEIGHT}Z` }
 })
 
+const paths = [0, 1, 2].map((g) =>
+  blades
+    .filter((b) => b.group === g)
+    .map((b) => b.d)
+    .join("")
+)
+
 export function GrassFringe({ className }: { className?: string }) {
   return (
     <svg
@@ -23,13 +29,10 @@ export function GrassFringe({ className }: { className?: string }) {
       aria-hidden
       className={className}
     >
-      {[0, 1, 2].map((g) => (
+      {paths.map((d, g) => (
         <path
           key={g}
-          d={blades
-            .filter((b) => b.group === g)
-            .map((b) => b.d)
-            .join("")}
+          d={d}
           fill="var(--tuft-strong)"
           fillOpacity={0.55 + g * 0.2}
           className="motion-safe:animate-[sway_3.6s_ease-in-out_infinite_alternate]"

@@ -1,31 +1,31 @@
-import { beamFaces, boxFaces, emptyBounds, grow, IDENTITY, isoText, light, points, polyFace, project, type V2, type V3 } from "@/lib/iso"
+import { beamFaces, boxFaces, emptyBounds, grow, light, points, polyFace, project, tint, type V2, type V3 } from "@/lib/iso"
 
-export type IsoMat = "face" | "glass" | "dark" | "steel" | "concrete" | "signal" | "frame" | "grass" | "wood"
+type IsoMat = "face" | "glass" | "dark" | "concrete" | "frame" | "grass" | "wood"
 
-const fills: Record<IsoMat, (l: number) => { fill: string; fillOpacity?: number }> = {
-  face: (l) => ({ fill: `color-mix(in oklab, var(--face) ${Math.round(l * 100)}%, var(--shade))` }),
-  frame: (l) => ({ fill: `color-mix(in oklab, var(--steel) ${Math.round(l * 100)}%, var(--shade))` }),
-  steel: (l) => ({ fill: `color-mix(in oklab, var(--steel) ${Math.round(l * 100)}%, var(--shade))` }),
-  dark: (l) => ({ fill: `color-mix(in oklab, var(--rubber) ${Math.round(l * 100)}%, var(--shade))` }),
-  concrete: (l) => ({ fill: `color-mix(in oklab, var(--concrete) ${Math.round(l * 100)}%, var(--shade))` }),
-  glass: (l) => ({ fill: "oklch(0.82 0.08 205)", fillOpacity: 0.22 + (1 - l) * 0.25 }),
-  signal: (l) => ({ fill: `color-mix(in oklab, var(--signal) ${Math.round(l * 100)}%, var(--shade))` }),
-  grass: (l) => ({ fill: `color-mix(in oklab, color-mix(in oklab, var(--leaf) 28%, var(--face)) ${Math.round(l * 100)}%, var(--shade))` }),
-  wood: (l) => ({ fill: `color-mix(in oklab, var(--wood) ${Math.round(l * 100)}%, var(--shade))` }),
+const base: Record<Exclude<IsoMat, "glass">, string> = {
+  face: "var(--face)",
+  frame: "var(--steel)",
+  dark: "var(--rubber)",
+  concrete: "var(--concrete)",
+  grass: "color-mix(in oklab, var(--leaf) 28%, var(--face))",
+  wood: "var(--wood)",
 }
+
+const fill = (mat: IsoMat, l: number) =>
+  mat === "glass" ? { fill: "oklch(0.82 0.08 205)", fillOpacity: 0.22 + (1 - l) * 0.25 } : { fill: tint(base[mat], l) }
 
 type BoxProps = { a: V3; b: V3; mat?: IsoMat; dashed?: boolean; hatch?: string }
 
 export function IsoBox({ a, b, mat = "face", dashed, hatch }: BoxProps) {
   return (
     <g>
-      {boxFaces(a, b, IDENTITY).map((f, i) => {
+      {boxFaces(a, b).map((f, i) => {
         const p = points(f.pts)
         return (
           <g key={i}>
             <polygon
               points={p}
-              {...fills[mat](light(f.normal))}
+              {...fill(mat, light(f.normal))}
               stroke="var(--ink)"
               strokeWidth={1}
               strokeLinejoin="round"
@@ -51,20 +51,6 @@ export function IsoLine({ pts, signal, dashed, width = 1 }: { pts: V3[]; signal?
       strokeDasharray={dashed ? "3 3" : undefined}
       vectorEffect="non-scaling-stroke"
     />
-  )
-}
-
-export function IsoText({ at, plane, children, size = 6 }: { at: V3; plane: "xz" | "yz" | "xy-x"; children: string; size?: number }) {
-  return (
-    <text
-      transform={isoText(plane, project(at))}
-      fontSize={size}
-      fill="var(--ink)"
-      textAnchor="middle"
-      style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}
-    >
-      {children}
-    </text>
   )
 }
 
@@ -95,7 +81,7 @@ const stroke = { stroke: "var(--ink)", strokeWidth: 1, strokeLinejoin: "round" a
 /** A flat polygon, e.g. a pane of glass. */
 export function IsoQuad({ pts, out, mat = "glass" }: { pts: V3[]; out: V3; mat?: IsoMat }) {
   const f = polyFace(pts, out)
-  return <polygon points={points(f.pts)} {...fills[mat](f.light)} {...stroke} />
+  return <polygon points={points(f.pts)} {...fill(mat, f.light)} {...stroke} />
 }
 
 /** A square-section member between two points. */
@@ -103,7 +89,7 @@ export function IsoBeam({ a, b, size = 2.4, mat = "frame" }: { a: V3; b: V3; siz
   return (
     <g>
       {beamFaces(a, b, size).map((f, i) => (
-        <polygon key={i} points={points(f.pts)} {...fills[mat](f.light)} {...stroke} />
+        <polygon key={i} points={points(f.pts)} {...fill(mat, f.light)} {...stroke} />
       ))}
     </g>
   )

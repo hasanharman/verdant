@@ -4,7 +4,6 @@ import {
   circle,
   emptyBounds,
   grow,
-  IDENTITY,
   light,
   polyFace,
   project,
@@ -34,7 +33,7 @@ export type PartKind =
   | "beds"
   | "foundation"
 
-export type PartMeta = { no: string; name: string; spec: string; side: "left" | "right" }
+type PartMeta = { no: string; name: string; spec: string; side: "left" | "right" }
 
 export const PART_ORDER: PartKind[] = [
   "ridge",
@@ -131,7 +130,7 @@ export function stageOf(kind: PartKind) {
   return STAGGER_START + STAGE_DELAY + (PART_ORDER.indexOf(kind) + 0.5) * STAGGER_STEP
 }
 
-export type Material =
+type Material =
   | "frame"
   | "glass"
   | "glint"
@@ -163,11 +162,11 @@ export type Shape = {
   noStroke?: boolean
 }
 
-export type Anchor = { kind: PartKind; at: V2 }
-export type Dim = { ext: V2[][]; line: V2[]; ticks: V2[][]; text: string; at: V2; plane: "top" | "side" | "ground-y" }
+type Anchor = { kind: PartKind; at: V2 }
+type Dim = { ext: V2[][]; line: V2[]; ticks: V2[][]; text: string; at: V2; plane: "top" | "side" | "ground-y" }
 export type Scene = { shapes: Shape[]; anchors: Anchor[]; dims: Dim[]; bounds: Bounds }
 
-export type SceneInput = {
+type SceneInput = {
   bays: number
   explode: number
   /** 0 → vents and door shut, 1 → fully open. */
@@ -183,7 +182,8 @@ export type SceneInput = {
 
 const add = (a: V3, b: V3): V3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 const scale = (v: V3, k: number): V3 => [v[0] * k, v[1] * k, v[2] * k]
-const formatMm = (n: number) => `${Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mm`
+export const thousands = (n: number) => Math.round(n).toLocaleString("en-US")
+export const formatMm = (n: number) => `${thousands(n)} mm`
 // Stable pseudo-random jitter so plants don't look stamped.
 const jitter = (i: number) => {
   const s = Math.sin(i * 127.1 + 311.7) * 43758.5453
@@ -201,7 +201,7 @@ export function buildScene(input: SceneInput): Scene {
   const move = (k: PartKind, v: V3) => scale(v, prog(k))
 
   const box = (kind: PartKind, mat: Material, a: V3, b: V3, o: V3, extra?: Partial<Shape>) => {
-    for (const f of boxFaces(a, b, IDENTITY, o)) shapes.push({ kind, mat, pts: f.pts, light: light(f.normal), ...extra })
+    for (const f of boxFaces(a, b, o)) shapes.push({ kind, mat, pts: f.pts, light: light(f.normal), ...extra })
   }
   const beam = (kind: PartKind, a: V3, b: V3, size: number, o: V3) => {
     for (const f of beamFaces(a, b, size, o)) shapes.push({ kind, mat: "frame", pts: f.pts, light: f.light })
@@ -266,7 +266,7 @@ export function buildScene(input: SceneInput): Scene {
       [[-4, SPAN - 4, -12], [L + 4, SPAN + 4, 0]],
     ]
     for (const [a, b] of strips)
-      for (const f of boxFaces(a, b, IDENTITY, oF))
+      for (const f of boxFaces(a, b, oF))
         shapes.push({ kind: "foundation", mat: "concrete", pts: f.pts, light: light(f.normal), hatch: f.side !== "top" })
     anchor("foundation", [2, SPAN + 4, -6], oF)
   }
@@ -333,7 +333,7 @@ export function buildScene(input: SceneInput): Scene {
     const yc = (y0 + y1) / 2
     line("irrigation", [[12, yc, 12.8], [L - 12, yc, 12.8]], oI, { tone: "water", width: 1.6 })
     for (let x = 18; x < L - 12; x += 12)
-      shapes.push({ kind: "irrigation", mat: "hole", pts: circle([x, yc, 12.8], 0.9, "xy", IDENTITY, oI, 8), noStroke: true })
+      shapes.push({ kind: "irrigation", mat: "hole", pts: circle([x, yc, 12.8], 0.9, oI, 8), noStroke: true })
 
     if (growth > 0.01) {
       const plants: { x: number; y: number; i: number }[] = []
@@ -379,7 +379,7 @@ export function buildScene(input: SceneInput): Scene {
       noStroke: true,
       pts: flat([[x - 3.5, MID, zl], [x + 3.5, MID, zl], [x + 14, MID, 13], [x - 14, MID, 13]]),
     })
-    for (const f of boxFaces([x - 4, MID - 2, zl], [x + 4, MID + 2, zl + 2], IDENTITY, oX))
+    for (const f of boxFaces([x - 4, MID - 2, zl], [x + 4, MID + 2, zl + 2], oX))
       shapes.push({ kind: "frame", mat: "lamp", pts: f.pts, light: light(f.normal) })
   }
 

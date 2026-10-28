@@ -1,12 +1,13 @@
 "use client"
 
-import { animate, useInView, useMotionValue, useMotionValueEvent, useReducedMotion } from "motion/react"
-import { useEffect, useId, useRef, useState } from "react"
+import { animate, useInView, useMotionValue, useReducedMotion } from "motion/react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 
 import { fitBoxes, IsoBox } from "@/components/iso/iso-box"
 import { SceneDefs, sceneIds, SceneShapes } from "@/components/greenhouse/greenhouse-drawing"
 import { buildScene, RIDGE } from "@/components/greenhouse/scene"
-import { points, project, type V3 } from "@/lib/iso"
+import { useMotionState } from "@/hooks/use-motion-state"
+import { points, project, tint, type V3 } from "@/lib/iso"
 
 const houses: { bays: number; at: V3 }[] = [
   { bays: 5, at: [0, 0, 0] },
@@ -19,26 +20,17 @@ const trees: V3[] = [
   [392, 132, 0],
 ]
 
-function Tree({ at }: { at: V3 }) {
+const TREE_FILL = tint("var(--leaf)", 0.7)
+const CROP_FILL = tint("var(--leaf)", 0.85)
+const treeShapes = trees.map((at) => {
   const base = project(at)
   const top = project([at[0], at[1], at[2] + 26])
   const blob = Array.from({ length: 16 }, (_, k) => {
     const a = (k / 16) * Math.PI * 2
     return [top[0] + Math.cos(a) * 13, top[1] + Math.sin(a) * 12] as const
   })
-  return (
-    <g>
-      <line x1={base[0]} y1={base[1]} x2={top[0]} y2={top[1]} stroke="var(--ink)" strokeWidth={2} vectorEffect="non-scaling-stroke" />
-      <polygon
-        points={points(blob)}
-        fill="color-mix(in oklab, var(--leaf) 70%, var(--shade))"
-        stroke="var(--ink)"
-        strokeWidth={1}
-        vectorEffect="non-scaling-stroke"
-      />
-    </g>
-  )
-}
+  return { key: at.join(), base, top, blob: points(blob) }
+})
 
 export function IsoFarm() {
   const { hatchId, glowId } = sceneIds(useId())
@@ -48,8 +40,7 @@ export function IsoFarm() {
   const [hot, setHot] = useState<number | null>(null)
 
   const growthMv = useMotionValue(0)
-  const [growth, setGrowth] = useState(0)
-  useMotionValueEvent(growthMv, "change", setGrowth)
+  const growth = useMotionState(growthMv)
   useEffect(() => {
     if (!inView) return
     const controls = animate(growthMv, 1, reduce ? { duration: 0 } : { duration: 2.2, ease: [0.22, 1, 0.36, 1] })
@@ -57,17 +48,10 @@ export function IsoFarm() {
   }, [inView, reduce, growthMv])
 
   const viewBox = fitBoxes([[[-24, -14, -4], [404, 222, RIDGE + 4]]], [], 4)
-
-  return (
-    <svg ref={ref} viewBox={viewBox} role="img" aria-label="Isometric plot with two greenhouses and crop rows" className="size-full overflow-visible">
-      <defs>
-        <SceneDefs hatchId={hatchId} glowId={glowId} />
-      </defs>
-      <IsoBox a={[-24, -14, -4]} b={[404, 222, 0]} mat="grass" />
-      <IsoBox a={[208, -14, -0.5]} b={[238, 124, 0.4]} mat="concrete" />
-      {houses.map((h, i) => {
-        const [dx, dy] = project(h.at)
-        const scene = buildScene({
+  const scenes = useMemo(
+    () =>
+      houses.map((h, i) =>
+        buildScene({
           bays: h.bays,
           explode: 0,
           open: i === 0 ? 0.6 : 0,
@@ -78,6 +62,19 @@ export function IsoFarm() {
           glint: false,
           flutes: i === 1,
         })
+      ),
+    [growth]
+  )
+
+  return (
+    <svg ref={ref} viewBox={viewBox} role="img" aria-label="Isometric plot with two greenhouses and crop rows" className="size-full overflow-visible">
+      <defs>
+        <SceneDefs hatchId={hatchId} glowId={glowId} />
+      </defs>
+      <IsoBox a={[-24, -14, -4]} b={[404, 222, 0]} mat="grass" />
+      <IsoBox a={[208, -14, -0.5]} b={[238, 124, 0.4]} mat="concrete" />
+      {houses.map((h, i) => {
+        const [dx, dy] = project(h.at)
         return (
           <g
             key={i}
@@ -86,7 +83,7 @@ export function IsoFarm() {
             onPointerLeave={() => setHot(null)}
             className="cursor-crosshair"
           >
-            <SceneShapes scene={scene} glazing={i === 1 ? "poly" : "clear"} frame="auto" all={hot === i} hatchId={hatchId} glowId={glowId} />
+            <SceneShapes scene={scenes[i]} glazing={i === 1 ? "poly" : "clear"} all={hot === i} hatchId={hatchId} glowId={glowId} />
           </g>
         )
       })}
@@ -104,7 +101,7 @@ export function IsoFarm() {
                   cy={cy.toFixed(2)}
                   rx={r.toFixed(2)}
                   ry={(r * 0.85).toFixed(2)}
-                  fill="color-mix(in oklab, var(--leaf) 85%, var(--shade))"
+                  fill={CROP_FILL}
                   stroke="var(--ink)"
                   strokeWidth={0.7}
                   vectorEffect="non-scaling-stroke"
@@ -113,8 +110,11 @@ export function IsoFarm() {
             })}
         </g>
       ))}
-      {trees.map((t) => (
-        <Tree key={t.join()} at={t} />
+      {treeShapes.map((t) => (
+        <g key={t.key}>
+          <line x1={t.base[0]} y1={t.base[1]} x2={t.top[0]} y2={t.top[1]} stroke="var(--ink)" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+          <polygon points={t.blob} fill={TREE_FILL} stroke="var(--ink)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+        </g>
       ))}
     </svg>
   )

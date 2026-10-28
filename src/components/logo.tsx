@@ -1,7 +1,7 @@
-import { points, polyFace, type V3 } from "@/lib/iso"
+import { points, polyFace, tint, type V3 } from "@/lib/iso"
 import { cn } from "@/lib/utils"
 
-// A tiny gable glasshouse, drawn once at module load.
+// A tiny gable glasshouse.
 const L = 16
 const W = 12
 const E = 8
@@ -24,7 +24,7 @@ export function Logo({ className }: { className?: string }) {
         <polygon
           key={i}
           points={f.pts}
-          fill={f.glass ? "var(--signal)" : `color-mix(in oklab, var(--face) ${Math.round(f.l * 100)}%, var(--shade))`}
+          fill={f.glass ? "var(--signal)" : tint("var(--face)", f.l)}
           fillOpacity={f.glass ? 0.4 : 1}
           stroke="var(--ink)"
           strokeWidth={1}

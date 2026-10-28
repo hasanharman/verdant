@@ -2,12 +2,12 @@
 
 import { useId, useMemo, type Ref } from "react"
 
-import { clamp01, COS30, grow, isoText, lerp, points, SIN30, type Bounds } from "@/lib/iso"
+import { clamp01, COS30, grow, lerp, points, SIN30, tint, type Bounds } from "@/lib/iso"
 import { cn } from "@/lib/utils"
-import { buildScene, PARTS, type Material, type PartKind, type Scene, type Shape } from "./scene"
+import { buildScene, PARTS, type PartKind, type Scene, type Shape } from "./scene"
 
 export type GlazingKey = "clear" | "diffuse" | "poly" | "tinted"
-export type FrameKey = "auto" | "silver" | "graphite" | "moss" | "white"
+export type FrameColor = "silver" | "graphite" | "moss" | "white"
 
 export const GLAZING: Record<GlazingKey, { label: string; color: string; opacity: number; glint: boolean; flutes?: boolean }> = {
   clear: { label: "Clear glass", color: "oklch(0.84 0.07 200)", opacity: 0.2, glint: true },
@@ -16,7 +16,7 @@ export const GLAZING: Record<GlazingKey, { label: string; color: string; opacity
   tinted: { label: "Shade glass", color: "oklch(0.62 0.05 150)", opacity: 0.38, glint: true },
 }
 
-export const FRAME: Record<Exclude<FrameKey, "auto">, { label: string; color: string }> = {
+export const FRAME: Record<FrameColor, { label: string; color: string }> = {
   silver: { label: "Silver", color: "oklch(0.86 0.006 250)" },
   graphite: { label: "Graphite", color: "oklch(0.38 0.008 255)" },
   moss: { label: "Moss green", color: "oklch(0.42 0.06 150)" },
@@ -32,7 +32,7 @@ const widest = (side: "left" | "right") =>
 const LEFT_TEXT = widest("left")
 const RIGHT_TEXT = widest("right")
 const r2 = (v: number) => Math.round(v * 100) / 100
-const pad = (b: Bounds, p: number): Bounds => ({
+const padBounds = (b: Bounds, p: number): Bounds => ({
   minX: r2(b.minX - p),
   minY: r2(b.minY - p),
   maxX: r2(b.maxX + p),
@@ -40,44 +40,59 @@ const pad = (b: Bounds, p: number): Bounds => ({
 })
 
 const DIM_TRANSFORM = {
-  top: (x: number, y: number) => isoText("xy-x", [x, y]),
+  top: (x: number, y: number) => `matrix(${COS30} ${SIN30} ${-COS30} ${SIN30} ${x} ${y})`,
   "ground-y": (x: number, y: number) => `matrix(${COS30} ${-SIN30} ${COS30} ${SIN30} ${x} ${y})`,
   side: (x: number, y: number) => `matrix(0 -1 ${COS30} ${SIN30} ${x} ${y})`,
 }
 
-type Look = { glazing: GlazingKey; frame: FrameKey; active?: PartKind | null; all?: boolean; hatchId: string; glowId: string }
+type Look = { glazing: GlazingKey; frame?: FrameColor; active?: PartKind | null; all?: boolean; hatchId: string; glowId: string }
 
 /** Paints a built scene. Shared by the main drawing and the farm illustration. */
 export function SceneShapes({ scene, glazing, frame, active, all, hatchId, glowId }: { scene: Scene } & Look) {
   const g = GLAZING[glazing]
-  const frameColor = frame === "auto" ? "var(--face)" : FRAME[frame].color
+  const frameColor = frame ? FRAME[frame].color : "var(--face)"
 
-  const fillFor = (s: Shape, on: boolean) => {
-    const pct = Math.round((s.light ?? 0.8) * 100)
-    const mix = (base: string, p = pct) => {
-      const c = `color-mix(in oklab, ${base} ${p}%, var(--shade))`
+  const fillFor = (s: Shape, on: boolean): { fill: string; fillOpacity?: number } => {
+    const l = s.light ?? 0.8
+    const mix = (base: string, light = l) => {
+      const c = tint(base, light)
       return on ? `color-mix(in oklab, ${c} 62%, var(--signal))` : c
     }
-    const table: Record<Material, { fill: string; fillOpacity?: number }> = {
-      frame: { fill: mix(frameColor) },
-      steel: { fill: mix("var(--steel)") },
-      concrete: { fill: mix("var(--concrete)") },
-      wood: { fill: mix("var(--wood)") },
-      soil: { fill: mix("var(--soil)", 90) },
-      floor: { fill: "var(--floor)" },
-      leaf: { fill: mix("var(--leaf)") },
-      fruit: { fill: "var(--fruit)" },
-      hole: { fill: "var(--shade)", fillOpacity: 0.55 },
-      glass: {
-        fill: on ? "var(--signal)" : `color-mix(in oklab, ${g.color}, var(--lamp) var(--lamp-mix))`,
-        fillOpacity: on ? 0.22 : s.hidden ? g.opacity * 0.6 : g.opacity * (0.85 + (1 - (s.light ?? 0.8)) * 0.5),
-      },
-      glint: { fill: "var(--glint)", fillOpacity: 0.6 },
-      lamp: { fill: mix("var(--lamp-body)", 100) },
-      cone: { fill: "var(--lamp-cone)" },
-      glow: { fill: `url(#${glowId})` },
+    switch (s.mat) {
+      case "frame":
+        return { fill: mix(frameColor) }
+      case "steel":
+        return { fill: mix("var(--steel)") }
+      case "concrete":
+        return { fill: mix("var(--concrete)") }
+      case "wood":
+        return { fill: mix("var(--wood)") }
+      case "soil":
+        return { fill: mix("var(--soil)", 0.9) }
+      case "leaf":
+        return { fill: mix("var(--leaf)") }
+      case "lamp":
+        return { fill: mix("var(--lamp-body)", 1) }
+      case "floor":
+        return { fill: "var(--floor)" }
+      case "fruit":
+        return { fill: "var(--fruit)" }
+      case "hole":
+        return { fill: "var(--shade)", fillOpacity: 0.55 }
+      case "glint":
+        return { fill: "var(--glint)", fillOpacity: 0.6 }
+      case "cone":
+        return { fill: "var(--lamp-cone)" }
+      case "glow":
+        return { fill: `url(#${glowId})` }
+      case "glass":
+        return on
+          ? { fill: "var(--signal)", fillOpacity: 0.22 }
+          : {
+              fill: `color-mix(in oklab, ${g.color}, var(--lamp) var(--lamp-mix))`,
+              fillOpacity: s.hidden ? g.opacity * 0.6 : g.opacity * (0.85 + (1 - l) * 0.5),
+            }
     }
-    return table[s.mat]
   }
 
   return (
@@ -85,7 +100,7 @@ export function SceneShapes({ scene, glazing, frame, active, all, hatchId, glowI
       {scene.shapes.map((s, i) => {
         const on = (all || active === s.kind) && s.mat !== "glow" && s.mat !== "cone"
         if (s.line) {
-          const tone = s.tone === "water" ? "var(--water)" : s.tone === "leaf" ? "color-mix(in oklab, var(--leaf) 55%, var(--shade))" : "var(--ink)"
+          const tone = s.tone === "water" ? "var(--water)" : s.tone === "leaf" ? tint("var(--leaf)", 0.55) : "var(--ink)"
           return (
             <polyline
               key={i}
@@ -146,7 +161,7 @@ export const sceneIds = (uid: string) => {
 type Props = {
   bays?: number
   glazing?: GlazingKey
-  frame?: FrameKey
+  frame?: FrameColor
   explode?: number
   open?: number
   growth?: number
@@ -166,7 +181,7 @@ type Props = {
 export function GreenhouseDrawing({
   bays = 4,
   glazing = "clear",
-  frame = "auto",
+  frame,
   explode = 0,
   open = 0,
   growth = 1,
@@ -184,13 +199,11 @@ export function GreenhouseDrawing({
 }: Props) {
   const { hatchId, glowId } = sceneIds(useId())
   const g = GLAZING[glazing]
-  const input = { bays, explode, open, growth, fruit, shine, stagger, glint: g.glint, flutes: !!g.flutes }
 
   // Fixed reference frame (fully exploded, everything open) so the viewBox never jumps.
   const frameRef = useMemo(() => {
     const base = { bays, open: 1, growth: 1, fruit: false, shine: 0, stagger: false, glint: false, flutes: false }
     const exploded = buildScene({ ...base, explode: 1 })
-    const assembled = buildScene({ ...base, explode: 0 })
     const b = { ...exploded.bounds }
     let vb = { ...b }
     const left = b.minX - COLUMN
@@ -199,13 +212,20 @@ export function GreenhouseDrawing({
       vb.minX = left - LEFT_TEXT - 6
       vb.maxX = right + RIGHT_TEXT + 6
     } else if (labels === "number") {
-      vb = pad(vb, 20)
+      vb = padBounds(vb, 20)
     }
-    if (dims) for (const d of assembled.dims) grow(vb, [...d.line, ...d.ext.flat()].map(([x, y]) => [x + 10, y + 10] as const))
-    return { vb: pad(vb, 10), left, right }
+    if (dims) {
+      const assembled = buildScene({ ...base, explode: 0 })
+      for (const d of assembled.dims) grow(vb, [...d.line, ...d.ext.flat()].map(([x, y]) => [x + 10, y + 10] as const))
+    }
+    return { vb: padBounds(vb, 10), left, right }
   }, [bays, labels, dims])
 
-  const scene = buildScene(input)
+  const { glint, flutes = false } = g
+  const scene = useMemo(
+    () => buildScene({ bays, explode, open, growth, fruit, shine, stagger, glint, flutes }),
+    [bays, explode, open, growth, fruit, shine, stagger, glint, flutes]
+  )
   const { vb } = frameRef
   const left = r2(camera ? scene.bounds.minX - COLUMN : frameRef.left)
   const right = r2(camera ? scene.bounds.maxX + COLUMN : frameRef.right)

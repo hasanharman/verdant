@@ -6,7 +6,7 @@ import { useId, type ReactNode } from "react"
 import { fitBoxes, HatchDef, IsoBeam, IsoBox, IsoLine, IsoQuad } from "@/components/iso/iso-box"
 import { points, project, type V3 } from "@/lib/iso"
 import { process } from "@/lib/site"
-import { SectionHeader } from "./section-header"
+import { Section, SectionHeader } from "./section"
 
 const loop: Transition = { duration: 2.4, repeat: Infinity, repeatType: "mirror", repeatDelay: 0.9, ease: [0.65, 0, 0.35, 1] }
 
@@ -167,40 +167,35 @@ const scenes = [SurveyScene, FoundationScene, FrameScene, GlazeScene]
 
 export function Process() {
   return (
-    <section id="process" className="border-t">
-      <div className="mx-auto max-w-[1440px] px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
-        <SectionHeader
-          index="02"
-          eyebrow="Process"
-          title={
-            <>
-              From bare ground to first harvest, <em className="font-serif font-normal tracking-[-0.02em]">one team.</em>
-            </>
-          }
-          lede="We don't drop off a kit and leave. The same crew surveys your plot, pours the footing, raises the frame and glazes it."
-        />
-        <ol className="mt-14 grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-2 xl:grid-cols-4">
-          {process.map((step, i) => {
-            const Art = scenes[i]
-            return (
-              <li key={step.no} className="flex flex-col bg-background p-5 sm:p-6">
-                <div className="bg-drafting relative aspect-[5/4] rounded-md border">
-                  <div className="absolute inset-0 p-8">
-                    <Art />
-                  </div>
-                  <span className="text-label absolute top-2.5 left-3 text-muted-foreground">Fig. {step.no}</span>
+    <Section id="process">
+      <SectionHeader
+        index="02"
+        eyebrow="Process"
+        title="From bare ground to first harvest,"
+        accent="one team."
+        lede="We don't drop off a kit and leave. The same crew surveys your plot, pours the footing, raises the frame and glazes it."
+      />
+      <ol className="mt-14 grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-2 xl:grid-cols-4">
+        {process.map((step, i) => {
+          const Art = scenes[i]
+          return (
+            <li key={step.no} className="flex flex-col bg-background p-5 sm:p-6">
+              <div className="bg-drafting relative aspect-[5/4] rounded-md border">
+                <div className="absolute inset-0 p-8">
+                  <Art />
                 </div>
-                <div className="mt-6 flex items-baseline justify-between">
-                  <span className="text-label text-signal">{step.no}</span>
-                  <span className="text-label text-muted-foreground">{step.note}</span>
-                </div>
-                <h3 className="mt-2 text-2xl font-medium tracking-tight">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-pretty text-muted-foreground">{step.body}</p>
-              </li>
-            )
-          })}
-        </ol>
-      </div>
-    </section>
+                <span className="text-label absolute top-2.5 left-3 text-muted-foreground">Fig. {step.no}</span>
+              </div>
+              <div className="mt-6 flex items-baseline justify-between">
+                <span className="text-label text-signal">{step.no}</span>
+                <span className="text-label text-muted-foreground">{step.note}</span>
+              </div>
+              <h3 className="mt-2 text-2xl font-medium tracking-tight">{step.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-pretty text-muted-foreground">{step.body}</p>
+            </li>
+          )
+        })}
+      </ol>
+    </Section>
   )
 }

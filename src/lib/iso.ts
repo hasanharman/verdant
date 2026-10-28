@@ -1,5 +1,4 @@
-// Isometric projection helpers. World axes: +x runs down-right, +y runs
-// down-left, +z runs up. The viewer looks from (+1, +1, +1).
+// Isometric helpers: +x down-right, +y down-left, +z up, viewed from (+1, +1, +1).
 
 export type V3 = readonly [number, number, number]
 export type V2 = readonly [number, number]
@@ -19,35 +18,15 @@ export function points(ps: readonly V2[]) {
 
 export const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-export const easeInOut = (t: number) =>
-  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-export const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 /** Eased progress of `t` through the window [a, b]. */
 export const range = (t: number, a: number, b: number) =>
   easeInOut(clamp01((t - a) / (b - a)))
 
-/** Rigid placement: rotate about z, then translate. */
-export type Placement = { origin: V3; rot: number }
-export const IDENTITY: Placement = { origin: [0, 0, 0], rot: 0 }
-
-export function place(p: V3, pl: Placement, offset: V3 = [0, 0, 0]): V3 {
-  const c = Math.cos(pl.rot)
-  const s = Math.sin(pl.rot)
-  return [
-    c * p[0] - s * p[1] + pl.origin[0] + offset[0],
-    s * p[0] + c * p[1] + pl.origin[1] + offset[1],
-    p[2] + pl.origin[2] + offset[2],
-  ]
-}
-
-export function rotateNormal(n: V3, rot: number): V3 {
-  const c = Math.cos(rot)
-  const s = Math.sin(rot)
-  return [c * n[0] - s * n[1], s * n[0] + c * n[1], n[2]]
-}
+const add = (p: V3, o: V3 = [0, 0, 0]): V3 => [p[0] + o[0], p[1] + o[1], p[2] + o[2]]
 
 /** A face is visible when its normal points toward the viewer. */
-export const facesViewer = (n: V3) => n[0] + n[1] + n[2] > 1e-6
+const facesViewer = (n: V3) => n[0] + n[1] + n[2] > 1e-6
 
 const LIGHT: V3 = (() => {
   const l: V3 = [-0.4, 0.65, 1]
@@ -61,13 +40,16 @@ export function light(n: V3) {
   return clamp01(0.64 + 0.36 * d)
 }
 
-export type BoxFace = { pts: V2[]; normal: V3; side: "top" | "x" | "y" | "-x" | "-y" }
+/** `color` darkened toward --shade by brightness `l`. */
+export const tint = (color: string, l: number) => `color-mix(in oklab, ${color} ${Math.round(l * 100)}%, var(--shade))`
 
-/** Visible faces of an axis-aligned box (in local space) after placement. */
-export function boxFaces(a: V3, b: V3, pl: Placement, offset?: V3): BoxFace[] {
+type BoxFace = { pts: V2[]; normal: V3; side: "top" | "x" | "y" | "-x" | "-y" }
+
+/** Visible faces of an axis-aligned box, shifted by `offset`. */
+export function boxFaces(a: V3, b: V3, offset?: V3): BoxFace[] {
   const [x0, y0, z0] = a
   const [x1, y1, z1] = b
-  const P = (x: number, y: number, z: number) => project(place([x, y, z], pl, offset))
+  const P = (x: number, y: number, z: number) => project(add([x, y, z], offset))
   const faces: { side: BoxFace["side"]; n: V3; q: () => V2[] }[] = [
     { side: "-x", n: [-1, 0, 0], q: () => [P(x0, y0, z0), P(x0, y1, z0), P(x0, y1, z1), P(x0, y0, z1)] },
     { side: "-y", n: [0, -1, 0], q: () => [P(x0, y0, z0), P(x1, y0, z0), P(x1, y0, z1), P(x0, y0, z1)] },
@@ -75,35 +57,15 @@ export function boxFaces(a: V3, b: V3, pl: Placement, offset?: V3): BoxFace[] {
     { side: "y", n: [0, 1, 0], q: () => [P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1)] },
     { side: "top", n: [0, 0, 1], q: () => [P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1)] },
   ]
-  const out: BoxFace[] = []
-  for (const f of faces) {
-    const n = rotateNormal(f.n, pl.rot)
-    if (facesViewer(n)) out.push({ pts: f.q(), normal: n, side: f.side })
-  }
-  return out
+  return faces.filter((f) => facesViewer(f.n)).map((f) => ({ pts: f.q(), normal: f.n, side: f.side }))
 }
 
-/** Circle in a local plane, returned as projected points. */
-export function circle(
-  c: V3,
-  r: number,
-  plane: "xy" | "xz" | "yz",
-  pl: Placement = IDENTITY,
-  offset?: V3,
-  segments = 24
-): V2[] {
+/** Horizontal circle, returned as projected points. */
+export function circle(c: V3, r: number, offset?: V3, segments = 24): V2[] {
   const out: V2[] = []
   for (let i = 0; i < segments; i++) {
     const a = (i / segments) * Math.PI * 2
-    const u = Math.cos(a) * r
-    const v = Math.sin(a) * r
-    const p: V3 =
-      plane === "xy"
-        ? [c[0] + u, c[1] + v, c[2]]
-        : plane === "xz"
-          ? [c[0] + u, c[1], c[2] + v]
-          : [c[0], c[1] + u, c[2] + v]
-    out.push(project(place(p, pl, offset)))
+    out.push(project(add([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r, c[2]], offset)))
   }
   return out
 }
@@ -120,14 +82,6 @@ export function grow(b: Bounds, pts: readonly V2[]) {
   return b
 }
 
-/** SVG matrix that lays text flat on an isometric plane. */
-export function isoText(plane: "xz" | "yz" | "xy-x", at: V2) {
-  const [e, f] = at
-  if (plane === "xz") return `matrix(${COS30} ${SIN30} 0 1 ${e} ${f})`
-  if (plane === "yz") return `matrix(${COS30} ${-SIN30} 0 1 ${e} ${f})`
-  return `matrix(${COS30} ${SIN30} ${-COS30} ${SIN30} ${e} ${f})`
-}
-
 const sub = (a: V3, b: V3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 const cross = (a: V3, b: V3): V3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
@@ -136,12 +90,9 @@ const unit = (a: V3): V3 => {
   return [a[0] / m, a[1] / m, a[2] / m]
 }
 
-/**
- * Any planar polygon in world space. Winding doesn't matter: the normal is
- * flipped to agree with `outward`, so callers only say which way is "out".
- */
+/** Any planar polygon in world space; the normal is flipped to agree with `outward`. */
 export function polyFace(ps: V3[], outward: V3, offset: V3 = [0, 0, 0]) {
-  const world = ps.map((p): V3 => [p[0] + offset[0], p[1] + offset[1], p[2] + offset[2]])
+  const world = ps.map((p) => add(p, offset))
   let n = unit(cross(sub(world[1], world[0]), sub(world[2], world[0])))
   if (dot(n, outward) < 0) n = [-n[0], -n[1], -n[2]]
   return { pts: world.map(project), normal: n, visible: facesViewer(n), light: light(n) }
